@@ -1,0 +1,52 @@
+name: Bug report (no personal data)
+description: Report a reproducible VKCM problem without sharing private comments or authentication
+title: "[Bug] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Privacy first.** Never paste VK OAuth callback URLs, tokens, account exports, browser cookies, SQLite journals, full personal comment URLs, or passwords.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows WSL
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Installation
+        - Archive import
+        - VK ID login
+        - Read-only comment discovery
+        - Browser deletion
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      placeholder: Describe the expected behavior without personal data.
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: What actually happened?
+      description: Use synthetic examples and remove any private identifiers.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Never upload your real archive or browser session.

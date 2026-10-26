@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="csrf" content="__CSRF_PLACEHOLDER__">
+<title>VK Comment Manager</title>
+<style>
+:root{color-scheme:light;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;--blue:#1769ed;--ink:#14253b;--muted:#63758a;--stroke:#dfe6ee;--bg:#f4f7fb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5}header{background:#fff;border-bottom:1px solid var(--stroke)}.container{width:min(1100px,calc(100% - 36px));margin:auto}header .container{display:flex;justify-content:space-between;align-items:center;padding:19px 0;gap:15px}.brand{font-weight:760;font-size:21px;letter-spacing:-.6px}.brand b{color:var(--blue)}.version{font-size:12px;color:var(--muted);background:#edf2f8;padding:6px 10px;border-radius:99px}h1{font-size:31px;letter-spacing:-1px;margin:26px 0 5px}p.lead{color:var(--muted);margin:0 0 24px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:white;border:1px solid var(--stroke);border-radius:15px;padding:20px;box-shadow:0 5px 25px #1d345008}.metric{font-size:32px;font-weight:750;letter-spacing:-1px}.metric-label{font-size:13px;color:var(--muted)}.section{margin:18px 0}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}.toolbar .left,.toolbar .right{display:flex;gap:9px;align-items:center;flex-wrap:wrap}input[type=search],input[type=password],textarea,select{border:1px solid #cad4e2;background:white;color:var(--ink);padding:11px 12px;border-radius:9px;font-size:14px;min-width:125px}input[type=search]{min-width:260px;flex:1}textarea{width:100%;min-height:78px;resize:vertical}button,.button{border:1px solid var(--stroke);background:#fff;color:var(--ink);border-radius:9px;padding:10px 13px;font:inherit;font-size:14px;cursor:pointer;text-decoration:none;white-space:nowrap}button:hover,.button:hover{border-color:#8baccf}button.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}button.danger{background:#b5283c;color:white;border-color:#b5283c}button:disabled{opacity:.45;cursor:not-allowed}.notice{font-size:13px;color:var(--muted)}.error{color:#c12a43}.success{color:#16844d}.items{display:grid;gap:10px}.item{background:#fff;border:1px solid var(--stroke);border-radius:12px;padding:16px;display:grid;grid-template-columns:24px 1fr;gap:9px}.item-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}.tag{background:#eef4fe;color:#285b99;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:700}.dim{font-size:12px;color:var(--muted)}.item p{margin:11px 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}.item a{color:var(--blue);font-weight:600;font-size:13px;text-decoration:none}.item .actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.item .actions button{font-size:12px;padding:5px 9px}.below{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:18px 0}.hidden{display:none!important}.import-box{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.import-box input{max-width:320px}.subtitle{font-size:17px;font-weight:700;margin:0 0 10px}.status{padding:4px 8px;border-radius:6px;background:#f1f4f7;color:var(--muted);font-size:12px}footer{text-align:center;color:#718298;font-size:12px;margin:30px 0}.helper{background:#fffaf1;border:1px solid #f4dfbd;color:#845b1d;padding:12px 14px;border-radius:10px;font-size:13px;margin:14px 0}a{color:var(--blue)}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.card{padding:15px}h1{font-size:25px}input[type=search]{min-width:0;width:100%}.toolbar .left{width:100%}.metric{font-size:28px}}
+</style>
+</head><body>
+<header><div class="container"><div class="brand"><b>VK</b> Comment Manager</div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="version">v0.4.0 · Локально</span><label for="uiLanguage" style="font-size:12px;font-weight:650" data-no-translate>Language</label><select id="uiLanguage" aria-label="Interface language" style="min-width:auto;padding:7px 9px"><option value="en">English</option><option value="ru">Русский</option></select></div></div></header>
+<main class="container">
+<h1>Ваши комментарии. Под вашим контролем.</h1>
+<p class="lead">Импортируйте архив или добавьте отдельные ссылки на комментарии к постам, фото и видео. Данные остаются на вашем компьютере.</p>
+<div class="grid">
+ <div class="card"><div class="metric" id="nAll">0</div><div class="metric-label">Найдено комментариев</div></div>
+ <div class="card"><div class="metric" id="nPosts">0</div><div class="metric-label">К записям</div></div>
+ <div class="card"><div class="metric" id="nMedia">0</div><div class="metric-label">К фото и видео</div></div>
+</div>
+<section class="card section">
+ <div class="subtitle">1. Загрузить архив VK</div>
+ <div class="import-box">
+ <a href="https://vk.ru/data_protection?section=rules&amp;scroll_to_archive=1" rel="noopener noreferrer" target="_blank">Запросить архив на сайте VK ↗</a>
+ <button type="button" id="findArchives" class="primary">Найти архив в Загрузках</button>
+ <select id="downloadedArchives" aria-label="Найденные архивы VK" disabled><option value="">Сначала найдите архив</option></select>
+ <button type="button" id="importDownloaded" disabled>Импортировать найденный</button>
+ </div>
+ <div id="discoveryStatus" class="notice" role="status">Программа проверит ZIP-файлы в Загрузках только после нажатия кнопки. В VK ничего не отправляется.</div>
+ <p class="notice">Или выберите ZIP вручную, если сохранили его в другом месте:</p>
+ <div class="import-box"><input type="file" id="zip" accept=".zip,application/zip"><button id="import">Импортировать выбранный ZIP</button></div>
+ <p class="notice">Как получить архив: откройте страницу «Защита данных» ВКонтакте, закажите экспорт и включите раздел «Комментарии». Когда ZIP будет готов, скачайте его и выберите здесь. Содержимое архива не отправляется разработчикам. Журнал действий сохраняется локально.</p>
+ <div id="importStatus" class="notice" role="status"></div>
+ <div class="subtitle" style="margin-top:20px">Или добавьте ссылки на комментарии вручную</div>
+ <textarea id="manualLinks" placeholder="https://vk.com/wall-123_456?reply=789&#10;https://vk.com/photo123_456?comment=789" spellcheck="false" aria-label="Ссылки на комментарии"></textarea>
+ <div class="import-box"><button id="addLinks" class="primary">Добавить ссылки</button><span id="manualStatus" class="notice" role="status">От 1 до 50 ссылок, каждая с новой строки. Это не удаляет комментарии.</span></div>
+</section>
+<section class="card section">
+ <div class="subtitle">2. Авторизация VK ID и проверка VK API <span class="version">экспериментально</span></div>
+ <div class="helper"><b>Шаг 2 из 3.</b> Создайте собственное приложение VK ID, затем введите его App ID и зарегистрированный адрес возврата. Это ограничение VK ID, а не требование передавать данные разработчикам. После входа здесь можно запустить подтверждаемую очистку из Терминала.</div>
+ <div class="import-box">
+ <input type="text" id="vkidAppId" inputmode="numeric" placeholder="App ID своего приложения" value="" style="flex:1;min-width:190px" autocomplete="off">
+ <input type="url" id="vkidRedirect" placeholder="Redirect URL, зарегистрированный в VK ID" value="" style="flex:2;min-width:300px" autocomplete="off">
+ <button id="startVKID" class="primary" disabled>Начать вход через VK ID</button>
+ </div>
+ <div id="localPortWarning" role="alert">__LOCAL_PORT_WARNING__</div>
+ <div class="notice" id="oauthStatus" role="status">Создайте собственное приложение VK ID и укажите его App ID и разрешённый URL возврата. Для HTTPS можно использовать только свою страницу.</div>
+ <div class="import-box" style="margin-top:10px"><a id="openVKID" target="_blank" rel="noopener noreferrer" hidden>Открыть официальный вход VK ID ↗</a></div>
+ <div class="import-box" style="margin-top:10px">
+ <input type="url" id="oauthReturn" placeholder="Если автоматического возврата нет: вставьте полный URL после входа" style="flex:1;min-width:280px" autocomplete="off">
+ <button type="button" id="finishVKID">Завершить вход по URL</button>
+ </div>
+ <div class="notice">Этот проект работает локально. Официальный вход VK ID не гарантирует доступ к устаревшим API методам удаления комментариев.</div>
+ <details style="margin-top:16px"><summary style="cursor:pointer;font-weight:700">Дополнительно: ручной токен VK API</summary>
+ <p class="notice">Только для опытных пользователей. Возможны ограничения VK API. Не вводите чужие токены.</p>
+ <div class="import-box"><input type="password" id="token" placeholder="Личный токен VK API" autocomplete="off" style="flex:1;min-width:220px"><button id="connect">Использовать токен</button><button id="disconnect">Забыть токен</button><span class="notice" id="authStatus">Не подключено</span></div>
+ </details>
+</section>
+<section class="section">
+ <div id="apiNotice" class="helper hidden" role="alert"></div>
+ <div class="subtitle">3. Просмотр и удаление своих комментариев</div>
+ <div class="helper"><b>Сначала проверка, потом удаление.</b> Просмотрите список ниже. Для удаления комментариев под записями запустите в Терминале <code>bash scripts/cleanup.sh "/путь/к/вашему/Archive.zip"</code>. Программа проверяет авторство, показывает список и требует явное подтверждение. Фото и видео поддерживаются только для просмотра.</div>
+ <div class="toolbar" style="margin-bottom:14px"><div class="left"><input type="search" id="search" placeholder="Поиск по тексту и ссылкам"><select id="kind"><option value="all">Все типы</option><option value="wall">Записи</option><option value="photo">Фотографии</option><option value="video">Видео</option></select><select id="show"><option value="all">Все статусы</option><option value="active">Не завершённые</option><option value="deleted">Отправленные, неизвестные или вручную отмеченные</option></select></div><div class="right"><button id="export">Экспорт CSV</button><button id="allPage">Выбрать страницу</button><button class="danger" id="bulk">Удалить выбранные</button></div></div>
+ <div id="list" class="items"><p class="notice">Загрузите архив, чтобы увидеть комментарии.</p></div>
+ <div class="below"><span class="notice" id="pagingInfo"></span><div><button id="prev">← Назад</button> <button id="next">Вперёд →</button></div></div>
+ <div class="toolbar" style="margin-top:12px"><div id="job" class="notice" role="status"></div><button id="cancel" disabled>Остановить очередь</button><button id="report">Журнал предыдущих запусков</button></div>
+ <div id="reportStatus" class="notice" role="status"></div>
+ <p class="notice">Перед каждым API-удалением проверяется авторство. Если VK запрещает метод (например, ошибка 1051), программа блокирует действия вместо ложного сообщения об успехе. Можно открыть комментарий на vk.com и самостоятельно удалить его. Кнопка «Я удалил в VK» записывает только твои слова в локальный журнал SQLite, а не подтверждение от VK. Статус «VK принял запрос» тоже не равен проверенному удалению.</p>
+</section>
+</main><footer>Local-first · Независимый проект · Не связан с VK</footer>
+<script>
+
+(function(){
+"use strict";
+const messages=new Map([["Локально","Local"],["Ваши комментарии. Под вашим контролем.","Your comments. Your control."],["Импортируйте архив или добавьте отдельные ссылки на комментарии к постам, фото и видео. Данные остаются на вашем компьютере.","Import your VK archive or add individual links to post, photo and video comments. Your data stays on your computer."],["Найдено комментариев","Comments found"],["К записям","Post comments"],["К фото и видео","Photo and video comments"],["1. Загрузить архив VK","1. Import your VK archive"],["Запросить архив на сайте VK ↗","Request an archive from VK ↗"],["Найти архив в Загрузках","Find archive in Downloads"],["Найденные архивы VK","Discovered VK archives"],["Сначала найдите архив","Find an archive first"],["Импортировать найденный","Import selected archive"],["Программа проверит ZIP-файлы в Загрузках только после нажатия кнопки. В VK ничего не отправляется.","VKCM checks ZIP files in Downloads only after you click the button. No data is sent to VK."],["Или выберите ZIP вручную, если сохранили его в другом месте:","Or choose your ZIP file manually if it is saved elsewhere:"],["Импортировать выбранный ZIP","Import ZIP"],["Как получить архив: откройте страницу «Защита данных» ВКонтакте, закажите экспорт и включите раздел «Комментарии». Когда ZIP будет готов, скачайте его и выберите здесь. Содержимое архива не отправляется разработчикам. Журнал действий сохраняется локально.","To get your archive: open VK's Data Protection page, request a data export, and include the Comments section. Download the ZIP once VK prepares it. Your archive is not sent to the developers. A local operation journal is stored on your computer."],["Или добавьте ссылки на комментарии вручную","Or add comment links manually"],["Ссылки на комментарии","Comment links"],["Добавить ссылки","Add links"],["От 1 до 50 ссылок, каждая с новой строки. Это не удаляет комментарии.","1 to 50 links, one per line. Adding them does not delete comments."],["2. Авторизация VK ID и проверка VK API","2. VK ID sign-in and VK API check"],["экспериментально","experimental"],["Шаг 2 из 3.","Step 2 of 3."],["Создайте собственное приложение VK ID, затем введите его App ID и зарегистрированный адрес возврата. Это ограничение VK ID, а не требование передавать данные разработчикам. После входа здесь можно запустить подтверждаемую очистку из Терминала.","Register your own VK ID app and enter its App ID and registered redirect URL. These are VK ID requirements; your account details are not sent to the maintainers. Once signed in, use Terminal to run the separately confirmed browser cleanup."],["App ID своего приложения","Your VK ID App ID"],["Redirect URL, зарегистрированный в VK ID","Registered VK ID redirect URL"],["Начать вход через VK ID","Start VK ID sign-in"],["Создайте собственное приложение VK ID и укажите его App ID и разрешённый URL возврата. Для HTTPS можно использовать только свою страницу.","Register your own VK ID app and enter its App ID and authorized redirect URL. Use only an HTTPS callback under your control."],["Открыть официальный вход VK ID ↗","Open official VK ID sign-in ↗"],["Если автоматического возврата нет: вставьте полный URL после входа","If sign-in does not return automatically, paste the full callback URL"],["Завершить вход по URL","Finish sign-in from URL"],["Этот проект работает локально. Официальный вход VK ID не гарантирует доступ к устаревшим API методам удаления комментариев.","VKCM runs locally. VK ID authentication does not guarantee access to legacy VK API comment-deletion methods."],["Дополнительно: ручной токен VK API","Advanced: manual VK API token"],["Только для опытных пользователей. Возможны ограничения VK API. Не вводите чужие токены.","For advanced users only. VK API restrictions may apply. Never use somebody else's tokens."],["Личный токен VK API","Your VK API token"],["Использовать токен","Use token"],["Забыть токен","Forget token"],["Не подключено","Not connected"],["3. Просмотр и удаление своих комментариев","3. Review and delete your own comments"],["Сначала проверка, потом удаление.","Review before deletion."],["Просмотрите список ниже. Для удаления комментариев под записями запустите в Терминале","Review the comments below. To delete your own wall comments, run this command in Terminal:"],["/путь/к/вашему/Archive.zip","/path/to/your/Archive.zip"],[". Программа проверяет авторство, показывает список и требует явное подтверждение. Фото и видео поддерживаются только для просмотра.",". VKCM checks authorship, previews each batch and requires an explicit confirmation. Photo and video comments are view-only in browser deletion mode."],["Поиск по тексту и ссылкам","Search text and URLs"],["Все типы","All types"],["Записи","Posts"],["Фотографии","Photos"],["Видео","Videos"],["Все статусы","All statuses"],["Не завершённые","Unfinished"],["Отправленные, неизвестные или вручную отмеченные","Submitted, uncertain or manually marked"],["Экспорт CSV","Export CSV"],["Выбрать страницу","Select page"],["Удалить выбранные","Delete selected"],["Загрузите архив, чтобы увидеть комментарии.","Import an archive to view comments."],["← Назад","← Previous"],["Вперёд →","Next →"],["Остановить очередь","Stop queue"],["Журнал предыдущих запусков","Operation journal"],["Перед каждым API-удалением проверяется авторство. Если VK запрещает метод (например, ошибка 1051), программа блокирует действия вместо ложного сообщения об успехе. Можно открыть комментарий на vk.com и самостоятельно удалить его. Кнопка «Я удалил в VK» записывает только твои слова в локальный журнал SQLite, а не подтверждение от VK. Статус «VK принял запрос» тоже не равен проверенному удалению.","VKCM checks authorship before every API deletion. If VK blocks an API method (for example, error 1051), deletion is blocked rather than reported as successful. You can open a comment on VK and remove it manually. The 'I deleted this on VK' button records only your confirmation in the local SQLite journal, not verification by VK. 'VK accepted request' is also not independent proof of deletion."],["Local-first · Независимый проект · Не связан с VK","Local-first · Independent project · Not affiliated with VK"],["Запись","Post"],["Фото","Photo"],["В архиве","In archive"],["VK принял запрос (не проверено)","VK accepted request (unverified)"],["Запрос без окончательного результата","Request pending"],["Исход неизвестен","Unknown outcome"],["Редактирование принято API","Edit accepted by API"],["Авторство не подтверждено","Author not verified"],["Отказ VK API","VK API rejected request"],["Отмечено пользователем как удалённое (не проверено)","Marked deleted by user (unverified)"],["Начата операция через браузер (исход неизвестен)","Browser action started (unknown outcome)"],["Команда браузера отправлена (удаление VK не проверено)","Browser delete sent (not verified)"],["Исчез из интерфейса VK (сервер не проверен)","Missing from VK UI (server not verified)"],["Удаление подтверждено пользователем (VK API не проверял)","User confirmed removal (not verified by API)"],["Не удалось показать комментарий (кнопку не нажимали)","Comment not found (no click)"],["В интерфейсе VK показан удалённый комментарий (сервер не проверен)","VK UI shows deleted comment (server not verified)"],["Ошибка сервера","Server error"],["Неизвестный статус","Unknown status"],["без имени","unnamed"],["Нет комментариев по выбранным фильтрам.","No comments match these filters."],["Пока ничего не импортировано.","Nothing imported yet."],["Текст не удалось извлечь из структуры HTML. Можно открыть запись по ссылке.","Could not extract comment text from the archive HTML. Open the original link."],["Открыть в VK ↗","Open on VK ↗"],["Проверить авторство","Verify author"],["Редактировать","Edit"],["Удалить","Delete"],["Я удалил в VK","I deleted this on VK"],["VK API 1051: метод недоступен для текущего типа токена","VK API 1051: method unavailable for this token type"],["Проверяем...","Checking..."],["Проверка VK API: ","VK API check: "],["Только запись вашего подтверждения в локальном журнале, без проверки VK API","Only your confirmation is recorded locally; not verified by VK API"],["Вы самостоятельно удалили этот комментарий непосредственно на сайте ВКонтакте? Программа не сможет подтвердить это через API.","Did you personally delete this comment on VK? VKCM cannot independently verify this via API."],["Не удалось записать подтверждение: ","Could not record your confirmation: "],["Введите новый текст (вложения редактироваться не будут)","Enter new text (attachments will not be edited)"],["VK API принял запрос. Это ещё не означает, что удаление независимо подтверждено.","VK API accepted the request. This is not independent verification of deletion."],["VK не подтвердил действие: ","VK did not verify the action: "],["Ищем архивы комментариев в Загрузках...","Looking for comment archives in Downloads..."],["Архивы комментариев не найдены","No comment archives found"],["В Загрузках нет поддерживаемого ZIP с comments*.html или comments*.txt. Сначала запросите архив в VK.","No supported ZIP with comments*.html or comments*.txt in Downloads. Request an archive from VK first."],["Локально читаем выбранный ZIP...","Reading the selected ZIP locally..."],["Выберите ZIP-архив","Choose a ZIP archive"],["Читаем архив...","Reading archive..."],["Проверьте, что в архиве есть файлы комментариев.","Check that the ZIP contains comment files."],["Вставьте ссылку на комментарий.","Paste a comment URL."],["Проверяем ссылки локально...","Checking links locally..."],["Введите App ID и Redirect URL своего VK ID приложения. Ничьи чужие настройки в программу не встроены.","Enter your own VK ID App ID and registered redirect URL. No third-party app settings are bundled."],["Статус VK ID недоступен","VK ID status unavailable"],["Ссылка подготовлена. Нажмите «Открыть официальный вход VK ID». Разрешения старого VK API пока не подтверждены.","Sign-in link ready. Click 'Open official VK ID sign-in'. Legacy VK API permissions are not yet verified."],["Вставьте полный URL ответа VK ID.","Paste the full VK ID callback URL."],["Авторизация не завершена: ","Sign-in incomplete: "],["Ошибка настройки: ","Setup error: "],["Отметьте комментарии галочками.","Select comments using the checkboxes."],["За один запуск можно удалить до 50 комментариев. Снимите часть галочек.","You can delete up to 50 comments per batch. Uncheck some items."],["Остановить очередь после текущего запроса к VK?","Stop the queue after the current VK request?"],["Сначала подключите VK аккаунт для просмотра журнала.","Sign into VK to view the operation journal."],["Введите числовой App ID своего приложения VK ID","Enter the numeric App ID of your own VK ID app"],["Укажите зарегистрированный Redirect URL","Enter the registered redirect URL"],["Redirect URL не должен содержать параметры, фрагмент или пароль","Redirect URL must not contain query parameters, fragments or credentials"],["Неверный порт Redirect URL","Invalid redirect URL port"],["HTTP возможен только для зарегистрированного localhost","HTTP is allowed only for registered localhost callbacks"],["Нужен HTTPS Redirect URL либо локальный адрес разработки","Use an HTTPS redirect URL or permitted localhost callback"],["Неверный ответ VK ID","Invalid VK ID response"],["Адрес ответа VK ID не совпадает с зарегистрированным","The VK ID callback URL does not match the registered redirect URL"],["Время ожидания входа истекло; начните заново","Sign-in timed out. Start again."],["Повторяющиеся параметры авторизации","Duplicate authorization parameters"],["Неоднозначный ответ VK ID","Ambiguous VK ID response"],["Слишком большой ответ VK ID","VK ID response is too large"],["Некорректный payload VK ID","Invalid VK ID payload"],["Несовпадение state: ответ VK ID не принят","OAuth state mismatch. VK ID response rejected."],["VK ID отказал в авторизации","VK ID refused authorization"],["VK ID не передал code или device_id","VK ID did not provide code or device_id"],["VK ID временно не отвечает","VK ID is temporarily unavailable"],["Ответ VK ID слишком большой","VK ID response is too large"],["Некорректный ответ VK ID","Malformed VK ID response"],["VK ID не разрешил обмен кода","VK ID code exchange was rejected"],["VK ID вернул неверный state","VK ID returned an invalid state"],["VK ID не вернул access_token","VK ID did not return an access_token"],["VK ID не вернул корректный ID пользователя","VK ID did not return a valid user ID"],["VK ID подтверждён. Аккаунт определён по users.get. Права методов комментариев пока не проверены.","VK ID verified. users.get identified the account. Comment API permissions have not yet been checked."],["VK ID подтверждён. Старый VK API может быть недоступен; браузерный режим требует отдельного подтверждения.","VK ID verified. Legacy VK API may be unavailable; browser deletion still requires explicit confirmation."],["Проверка VK ID завершилась ошибкой.","VK ID verification failed."],["Неверный ID комментария","Invalid comment ID"],["Подтвердите, что вы самостоятельно удалили комментарий на сайте VK","Confirm that you personally deleted the comment on VK"],["Дождитесь завершения предыдущей операции","Please finish the previous operation first"],["Комментарий не найден","Comment not found"],["Сначала войдите в VK ID","Please sign into VK ID first"],["У комментария уже имеется невыясненный или подтверждённый API-ответ","This comment already has an uncertain or acknowledged API result"],["Комментарий уже отмечен пользователем как удалённый","This comment is already marked deleted by the user"],["Отмечено по вашему подтверждению, удаление VK API не проверено.","Marked by your confirmation, not independently verified by VK API."],["VK API 1051: этот тип токена не разрешает проверку и удаление комментариев этой категории. Откройте запись в VK.","VK API 1051: this token cannot verify or delete comments of this type. Open the original VK post."],["VK API 1051: этот тип токена не имеет доступа к проверке комментариев. Откройте комментарий на сайте VK.","VK API 1051: this token cannot check comment ownership. Open the comment on VK."],["VK API 1051: метод недоступен для текущего типа токена. Повторная авторизация с тем же приложением не даст нужных прав.","VK API 1051: this method is unavailable for this token type. Re-authenticating with the same app will not grant permission."],["VK API 1051: для выбранной категории доступ запрещён; массовое удаление через этот токен не запустится.","VK API 1051: access to this category is blocked; batch API deletion cannot run with this token."],["VK API 1051: метод недоступен для этого типа токена","VK API 1051: method unavailable for this token type"],["Завершите текущую операцию перед входом","Finish the current operation before signing in"],["Сначала начните вход через VK ID","Start VK ID sign-in first"],["Не удалось обменять код VK ID на токен","Could not exchange VK ID code for a token"],["Вход выполнен, users.get доступен. Доступность методов комментариев не подтверждена.","Signed in; users.get available. Comment API permissions have not been verified."],["VK ID авторизован, но старые методы VK API недоступны или не проверены.","VK ID authorized; legacy VK API methods are unavailable or unverified."],["Методы комментариев VK API недоступны или не проверены","VK comment API methods are unavailable or unverified"],["users.get отвечает. Доступ к методам комментариев нужно проверять отдельно","users.get works. Comment API permission must be tested separately"],["v0.4.0 · Локально","v0.4.0 · Local"],["bash scripts/cleanup.sh \"/путь/к/вашему/Archive.zip\"","bash scripts/cleanup.sh \"/path/to/your/Archive.zip\""]]);
+const attributes=["placeholder","aria-label","title"];
+const originalTexts=new WeakMap();
+const renderedTexts=new WeakMap();
+const originalAttrs=new WeakMap();
+const renderedAttrs=new WeakMap();
+let current="en";
+window.vkcmText=(ru,en)=>current==="ru"?ru:en;
+window.vkcmTranslate=value=>current==="en"?textToEnglish(String(value)):String(value);
+function textToEnglish(raw){
+ const match=/^(\s*)([\s\S]*?)(\s*)$/.exec(raw);
+ if(!match)return raw;
+ let body=match[2];
+ if(messages.has(body))return match[1]+messages.get(body)+match[3];
+ const patterns=[
+  [/^ВКонтакте вернул ошибку API 1051 для категорий: (.+)\. Этот токен может определить аккаунт, но не даёт проверить авторство или удалить эти комментарии через VK API\. Открой комментарий в VK, удали его там и при желании отметь результат вручную\. Это не подтверждение удаления со стороны программы\.$/, x=>"VK returned API error 1051 for: "+x+". The token may identify the account but cannot verify or delete these comments via VK API. Open the comment on VK and remove it manually if appropriate. VKCM cannot verify that action."],
+  [/^Аккаунт VK ID (\d+) \((.+)\)\. users\.get работает; методы комментариев могут быть ограничены$/,(_,id,name)=>"VK ID account "+id+" ("+name+"). users.get works; comment methods may be restricted."],
+  [/^Проверка авторства: (.+?) — (.+)$/,(_,status,reason)=>"Author check: "+status+" — "+reason],
+  [/^Показано (\d+) из (\d+) · стр\. (\d+) · отмечено (\d+)$/,(_,n,total,page,selected)=>"Showing "+n+" of "+total+" · page "+page+" · selected "+selected],
+  [/^Удалить комментарий (.+) во ВКонтакте\? Это необратимо\.$/,(_,id)=>"Delete comment "+id+" on VK? This cannot be undone."],
+  [/^Изменить комментарий (.+) во ВКонтакте\?$/,(_,id)=>"Edit comment "+id+" on VK?"],
+  [/^(.+) · (\d+) файлов · ([\d.]+) МиБ$/,(_,name,count,size)=>name+" · "+count+" files · "+size+" MiB"],
+  [/^Подходящих ZIP: (\d+)\. Выберите архив для локального импорта\.$/,(_,n)=>"Matching ZIP files: "+n+". Select one to import locally."],
+  [/^Импортировано (\d+) уникальных комментариев из (\d+) файлов\. Ничего не удалено\.$/,(_,n,files)=>"Imported "+n+" unique comments from "+files+" files. Nothing was deleted."],
+  [/^Готово: (\d+) уникальных комментариев, файлов (\d+)\.(.*)$/,(_,n,files,extra)=>"Done: "+n+" unique comments in "+files+" files."+textToEnglish(extra)],
+  [/^Добавлено: (\d+)\. Всего в списке: (\d+)\. Повторов во вводе: (\d+)\.$/,(_,n,total,dup)=>"Added: "+n+". Total in list: "+total+". Duplicate input links: "+dup+"."],
+  [/^VK ID: (\d+)\. users\.get отвечает\. Доступ к методам комментариев нужно проверять отдельно$/,(_,id)=>"VK ID: "+id+". users.get responds. Comment API permissions need separate checks."],
+  [/^VK ID: (\d+)\. Методы комментариев VK API недоступны или не проверены$/,(_,id)=>"VK ID: "+id+". Comment API methods are unavailable or unverified."],
+  [/^VK ID (\d+) подтверждён через users\.get$/,(_,id)=>"VK ID "+id+" verified via users.get"],
+  [/^Вы собираетесь удалить (\d+) комментариев\. Операция необратима\. Для подтверждения введите УДАЛИТЬ$/,(_,n)=>"You are about to delete "+n+" comments. This cannot be undone. Type DELETE to confirm."],
+  [/^Запущена очередь из (\d+) комментариев$/,(_,n)=>"Started a queue of "+n+" comments"],
+  [/^Очередь: обработано (\d+)\/(\d+), неуспешно\/пропущено (\d+)\. (.*)$/,(_,done,total,failed,message)=>"Queue: "+done+"/"+total+" processed, "+failed+" failed/skipped. "+message],
+  [/^Ошибка: (.*)$/,(_,message)=>"Error: "+message],
+  [/^VK ID (\d+): (.*)$/,(_,id,message)=>"VK ID "+id+": "+message],
+ ];
+ for(const [regex,fn] of patterns){const found=body.match(regex);if(found)return match[1]+fn(...found)+match[3]}
+ return raw;
+}
+function applyText(node){
+ if(!node||!node.parentElement||["SCRIPT","STYLE","TEXTAREA"].includes(node.parentElement.tagName))return;
+ let source=originalTexts.get(node);
+ if(source===undefined||node.nodeValue!==renderedTexts.get(node)){source=node.nodeValue;originalTexts.set(node,source)}
+ const result=current==="en"?textToEnglish(source):source;
+ renderedTexts.set(node,result);
+ if(node.nodeValue!==result)node.nodeValue=result;
+}
+function applyElement(el){
+ if(el.nodeType!==1)return;
+ let orig=originalAttrs.get(el),saved=renderedAttrs.get(el);
+ if(!orig){orig={};originalAttrs.set(el,orig)}
+ if(!saved){saved={};renderedAttrs.set(el,saved)}
+ for(const name of attributes){
+   if(!el.hasAttribute(name))continue;
+   const currentValue=el.getAttribute(name);
+   if(orig[name]===undefined||currentValue!==saved[name])orig[name]=currentValue;
+   const result=current==="en"?textToEnglish(orig[name]):orig[name];
+   saved[name]=result;
+   if(currentValue!==result)el.setAttribute(name,result);
+ }
+}
+function visit(root){
+ if(root.nodeType===3){applyText(root);return}
+ if(root.nodeType!==1&&root.nodeType!==9)return;
+ if(root.nodeType===1&&["SCRIPT","STYLE","TEXTAREA"].includes(root.tagName))return;
+ if(root.nodeType===1)applyElement(root);
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);
+ while(walker.nextNode()){
+  const item=walker.currentNode;
+  if(item.nodeType===1)applyElement(item);
+  else applyText(item);
+ }
+}
+function applyAll(){document.documentElement.lang=current;visit(document.body)}
+function setLocale(locale){
+ current=locale==="ru"?"ru":"en";
+ try{localStorage.setItem("vkcm.ui.language",current)}catch(_){}
+ if(document.getElementById("uiLanguage"))document.getElementById("uiLanguage").value=current;
+ applyAll()
+}
+try{current=localStorage.getItem("vkcm.ui.language")||(navigator.language.toLowerCase().startsWith("ru")?"ru":"en")}catch(_){current="en"}
+if(current!=="ru")current="en";
+const menu=document.getElementById("uiLanguage");
+if(menu){menu.value=current;menu.addEventListener("change",()=>setLocale(menu.value))}
+const observer=new MutationObserver(records=>{
+ let affected=new Set();
+ for(const r of records){
+  if(r.type==="characterData")affected.add(r.target);
+  else if(r.type==="attributes")affected.add(r.target);
+  else r.addedNodes.forEach(n=>affected.add(n));
+ }
+ for(const item of affected)visit(item);
+});
+observer.observe(document.body,{childList:true,characterData:true,attributes:true,attributeFilter:attributes,subtree:true});
+applyAll();
+})();
+</script>
+<script>
+const csrf=document.querySelector('meta[name=csrf]').content;
+const $=id=>document.getElementById(id);
+let page=1, total=0, shown=[], selected=new Set(), unavailableKinds=new Set(), polling=false;
+const params=()=>new URLSearchParams({q:$('search').value,kind:$('kind').value,show:$('show').value,page:String(page)});
+const label={wall:'Запись',photo:'Фото',video:'Видео'};
+const blocked=new Set(['api_accepted','pending','outcome_unknown','user_marked_deleted','browser_pending','browser_unknown','browser_ui_removed','browser_user_confirmed','browser_not_found','browser_ui_deleted_marker']);
+const statusLabel={archived:'В архиве',api_accepted:'VK принял запрос (не проверено)',pending:'Запрос без окончательного результата',outcome_unknown:'Исход неизвестен',edited_accepted:'Редактирование принято API',skipped_unverified:'Авторство не подтверждено',api_error:'Отказ VK API',user_marked_deleted:'Отмечено пользователем как удалённое (не проверено)',browser_pending:'Начата операция через браузер (исход неизвестен)',browser_unknown:'Команда браузера отправлена (удаление VK не проверено)',browser_ui_removed:'Исчез из интерфейса VK (сервер не проверен)',browser_user_confirmed:'Удаление подтверждено пользователем (VK API не проверял)',browser_not_found:'Не удалось показать комментарий (кнопку не нажимали)',browser_ui_deleted_marker:'В интерфейсе VK показан удалённый комментарий (сервер не проверен)'};
+const request=async(url,data,raw=false)=>{
+ const res=await fetch(url,{method:'POST',headers:{'X-VKCM-CSRF':csrf,...(raw?{'Content-Type':'application/zip'}:{'Content-Type':'application/json'})},body:raw?data:JSON.stringify(data)});
+ const result=await res.json(); if(!res.ok)throw new Error(vkcmTranslate(result.error||vkcmText('Ошибка сервера','Server error'))); return result;
+};
+function el(tag,className,text){let e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e}
+async function load(){
+ try {
+  const data=await (await fetch('/api/comments?'+params())).json();shown=data.items;total=data.total;
+  $('nAll').textContent=data.archive.found||0;$('nPosts').textContent=data.counts.wall;$('nMedia').textContent=data.counts.photo+data.counts.video;
+  unavailableKinds=new Set(data.unavailable_kinds||[]);
+  const unavailable=unavailableKinds;
+  if(unavailable.size){
+    $('apiNotice').classList.remove('hidden');
+    $('apiNotice').textContent='ВКонтакте вернул ошибку API 1051 для категорий: '+Array.from(unavailable).map(k=>label[k]||k).join(', ')+'. Этот токен может определить аккаунт, но не даёт проверить авторство или удалить эти комментарии через VK API. Открой комментарий в VK, удали его там и при желании отметь результат вручную. Это не подтверждение удаления со стороны программы.';
+  }else{
+    $('apiNotice').classList.add('hidden');
+  }
+  $('authStatus').textContent=data.token_set?`Аккаунт VK ID ${data.auth_user.id} (${data.auth_user.name||'без имени'}). users.get работает; методы комментариев могут быть ограничены`:'Не подключено';
+  $('list').replaceChildren();
+  if(!shown.length)$('list').append(el('p','notice',data.archive.found?'Нет комментариев по выбранным фильтрам.':'Пока ничего не импортировано.'));
+  for(const c of shown){
+   const wrap=el('article','item'), check=el('input');check.type='checkbox';check.checked=selected.has(c.id)&&!unavailable.has(c.kind);check.disabled=blocked.has(c.status)||unavailable.has(c.kind);
+   if(check.disabled)selected.delete(c.id);
+   check.addEventListener('change',()=>{check.checked?selected.add(c.id):selected.delete(c.id)});
+   const content=el('div'), top=el('div','item-top'), info=el('div'), type=el('span','tag',label[c.kind]);info.append(type,el('span','dim','  '+(c.date||c.source)));
+   top.append(info,el('span','status',statusLabel[c.status]||c.status)); content.append(top);
+   const checkState=data.checks[c.id];
+   if(checkState&&checkState.status){
+     const checkInfo=el('p','notice',`Проверка авторства: ${checkState.status} — ${checkState.reason}`);
+     content.append(checkInfo);
+   }
+   content.append(el('p','',c.text||'Текст не удалось извлечь из структуры HTML. Можно открыть запись по ссылке.'));
+   const actions=el('div','actions'), link=el('a','','Открыть в VK ↗');link.href=c.url;link.target='_blank';link.rel='noopener noreferrer';actions.append(link);
+   const checkBtn=el('button','','Проверить авторство'),edit=el('button','','Редактировать'),del=el('button','','Удалить');
+   checkBtn.disabled=edit.disabled=del.disabled=blocked.has(c.status)||unavailable.has(c.kind);
+   if(unavailable.has(c.kind)){
+     checkBtn.title=edit.title=del.title='VK API 1051: метод недоступен для текущего типа токена';
+   }
+   checkBtn.onclick=async()=>{checkBtn.disabled=true;checkBtn.textContent='Проверяем...';
+     try{await request('/api/preflight',{ids:[c.id]});await load()}
+     catch(e){alert(vkcmText('Проверка VK API: ','VK API check: ')+e.message);checkBtn.disabled=false;checkBtn.textContent='Проверить авторство'}
+   };
+   edit.onclick=()=>single(c,'edit');del.onclick=()=>single(c,'delete');actions.append(checkBtn,edit,del);
+   if(data.auth_user && !blocked.has(c.status)){
+     const manual=el('button','','Я удалил в VK');
+     manual.title='Только запись вашего подтверждения в локальном журнале, без проверки VK API';
+     manual.onclick=async()=>{
+       if(!confirm(vkcmText('Вы самостоятельно удалили этот комментарий непосредственно на сайте ВКонтакте? Программа не сможет подтвердить это через API.','Did you personally delete this comment on VK? VKCM cannot verify this via API.')))return;
+       try{
+         await request('/api/manual-mark',{id:c.id,confirmation:'Я УДАЛИЛ В VK'});
+         selected.delete(c.id);
+         await load();
+       }catch(e){alert(vkcmText('Не удалось записать подтверждение: ','Could not record your confirmation: ')+e.message)}
+     };
+     actions.append(manual);
+   }
+   content.append(actions);wrap.append(check,content);$('list').append(wrap);
+  }
+  $('pagingInfo').textContent=`Показано ${shown.length} из ${total} · стр. ${page} · отмечено ${selected.size}`;
+  $('prev').disabled=page===1;$('next').disabled=page*50>=total;
+ }catch(e){$('importStatus').textContent=e.message}
+}
+async function single(c,operation){
+ let message='';if(operation==='edit'){message=prompt(vkcmText('Введите новый текст (вложения редактироваться не будут)','Enter new text (attachments will not be edited)'),c.text||'');if(message===null||!message.trim())return}
+ if(!confirm(operation==='delete'?vkcmText(`Удалить комментарий ${c.id} во ВКонтакте? Это необратимо.`,`Delete comment ${c.id} on VK? This cannot be undone.`):vkcmText(`Изменить комментарий ${c.id} во ВКонтакте?`,`Edit comment ${c.id} on VK?`)))return;
+ try{await request('/api/action',{id:c.id,operation,message,confirmed:true});selected.delete(c.id);alert(vkcmText('VK API принял запрос. Это ещё не означает, что удаление независимо подтверждено.','VK API accepted the request. This is not independent proof of deletion.'));await load()}
+ catch(e){alert(vkcmText('VK не подтвердил действие: ','VK did not verify the action: ')+e.message);await load()}
+}
+$('findArchives').onclick=async()=>{
+ $('findArchives').disabled=true;$('discoveryStatus').textContent='Ищем архивы комментариев в Загрузках...';
+ try{
+   const res=await request('/api/find-archives',{});
+   const list=$('downloadedArchives');list.replaceChildren();
+   if(!res.archives.length){
+     list.append(el('option','','Архивы комментариев не найдены'));
+     list.disabled=true;$('importDownloaded').disabled=true;
+     $('discoveryStatus').textContent='В Загрузках нет поддерживаемого ZIP с comments*.html или comments*.txt. Сначала запросите архив в VK.';
+   } else {
+     for(const archive of res.archives){
+       const option=el('option','',`${archive.name} · ${archive.pages} файлов · ${(archive.size/1024/1024).toFixed(1)} МиБ`);
+       option.value=archive.name;list.append(option);
+     }
+     list.disabled=false;$('importDownloaded').disabled=false;
+     $('discoveryStatus').textContent=`Подходящих ZIP: ${res.archives.length}. Выберите архив для локального импорта.`;
+   }
+ }catch(e){$('discoveryStatus').textContent='Ошибка: '+e.message}
+ finally{$('findArchives').disabled=false}
+};
+$('importDownloaded').onclick=async()=>{
+ const name=$('downloadedArchives').value;if(!name)return;
+ $('importDownloaded').disabled=true;$('discoveryStatus').textContent='Локально читаем выбранный ZIP...';
+ try{
+   const result=await request('/api/import-downloaded',{name});selected.clear();page=1;
+   $('discoveryStatus').textContent=`Импортировано ${result.found} уникальных комментариев из ${result.files} файлов. Ничего не удалено.`;
+   await load();
+ }catch(e){$('discoveryStatus').textContent='Ошибка: '+e.message}
+ finally{$('importDownloaded').disabled=$('downloadedArchives').disabled}
+};
+$('import').onclick=async()=>{
+ const file=$('zip').files[0];if(!file){alert(vkcmText('Выберите ZIP-архив','Choose a ZIP archive'));return}
+ $('import').disabled=true;$('importStatus').textContent='Читаем архив...';
+ try{const d=await request('/api/import',file,true);selected.clear();page=1;
+ $('importStatus').textContent=`Готово: ${d.found} уникальных комментариев, файлов ${d.files}.`+(d.files===0?' Проверьте, что в архиве есть файлы комментариев.':''); await load()}
+ catch(e){$('importStatus').textContent='Ошибка: '+e.message}
+ finally{$('import').disabled=false}
+};
+$('addLinks').onclick=async()=>{
+ const value=$('manualLinks').value.trim();
+ if(!value){$('manualStatus').textContent='Вставьте ссылку на комментарий.';return}
+ $('addLinks').disabled=true;$('manualStatus').textContent='Проверяем ссылки локально...';
+ try{const result=await request('/api/add-links',{links:value});page=1;
+   $('manualStatus').textContent=`Добавлено: ${result.added}. Всего в списке: ${result.total}. Повторов во вводе: ${result.duplicates}.`;
+   $('manualLinks').value='';await load()}
+ catch(e){$('manualStatus').textContent='Ошибка: '+e.message}
+ finally{$('addLinks').disabled=false}
+};
+async function loadVKIDStatus(){
+ try{const r=await(await fetch('/api/oauth-state')).json();
+   $('oauthStatus').textContent=r.message||(r.vkid_user?
+     `VK ID: ${r.vkid_user.id}. ${r.legacy_api?'users.get отвечает. Доступ к методам комментариев нужно проверять отдельно':'Методы комментариев VK API недоступны или не проверены'}`:
+     'Введите App ID и Redirect URL своего VK ID приложения. Ничьи чужие настройки в программу не встроены.');
+ }catch(e){$('oauthStatus').textContent='Статус VK ID недоступен'}
+}
+function updateVKIDReady(){
+ const id=$('vkidAppId').value.trim();
+ const redirect=$('vkidRedirect').value.trim();
+ const configured=/^[1-9][0-9]{0,14}$/.test(id) &&
+   (/^https:\/\//i.test(redirect) || /^http:\/\/(?:127\.0\.0\.1|localhost):\d+\//i.test(redirect));
+ $('startVKID').disabled=!configured;
+}
+$('vkidAppId').addEventListener('input',updateVKIDReady);
+$('vkidRedirect').addEventListener('input',updateVKIDReady);
+$('startVKID').onclick=async()=>{
+ $('startVKID').disabled=true;$('openVKID').hidden=true;
+ try{
+  const r=await request('/api/oauth/start',{app_id:$('vkidAppId').value,redirect_uri:$('vkidRedirect').value});
+  $('openVKID').href=r.url;$('openVKID').hidden=false;
+  $('oauthStatus').textContent='Ссылка подготовлена. Нажмите «Открыть официальный вход VK ID». Разрешения старого VK API пока не подтверждены.';
+ }catch(e){$('oauthStatus').textContent='Ошибка настройки: '+e.message}
+ finally{updateVKIDReady()}
+};
+$('finishVKID').onclick=async()=>{
+ const url=$('oauthReturn').value.trim();if(!url){$('oauthStatus').textContent='Вставьте полный URL ответа VK ID.';return}
+ $('finishVKID').disabled=true;
+ try{
+  const r=await request('/api/oauth/finish',{redirect_url:url});
+  $('oauthReturn').value='';
+  $('oauthStatus').textContent=r.message;
+  await load();
+ }catch(e){$('oauthReturn').value='';$('oauthStatus').textContent='Авторизация не завершена: '+e.message}
+ finally{$('finishVKID').disabled=false}
+};
+$('connect').onclick=async()=>{try{let d=await request('/api/token',{token:$('token').value});$('token').value='';$('authStatus').textContent=d.token_set?`VK ID ${d.user.id} подтверждён через users.get`:'Не подключено'}catch(e){alert(e.message)}};
+$('disconnect').onclick=async()=>{await request('/api/token',{token:''});await load()};
+let debounce; $('search').oninput=()=>{clearTimeout(debounce);debounce=setTimeout(()=>{page=1;load()},200)};
+for(const id of ['kind','show'])$(id).onchange=()=>{page=1;load()};
+$('prev').onclick=()=>{if(page>1){page--;load()}};$('next').onclick=()=>{if(page*50<total){page++;load()}};
+$('allPage').onclick=()=>{for(const c of shown)if(!blocked.has(c.status)&&!unavailableKinds.has(c.kind))selected.add(c.id);load()};
+$('export').onclick=()=>{const p=params();p.delete('page');location.href='/api/export?'+p};
+$('bulk').onclick=async()=>{
+ const ids=Array.from(selected);if(!ids.length){alert(vkcmText('Отметьте комментарии галочками.','Select comments using checkboxes.'));return}
+ if(ids.length>50){alert(vkcmText('За один запуск можно удалить до 50 комментариев. Снимите часть галочек.','You can process up to 50 comments per API batch. Uncheck some items.'));return}
+ const confirmation=prompt(vkcmText(`Вы собираетесь удалить ${ids.length} комментариев. Операция необратима. Для подтверждения введите DELETE`,`You are about to delete ${ids.length} comments. This cannot be undone. Type DELETE to confirm.`));
+ if(confirmation!=='DELETE')return;
+ try{const d=await request('/api/bulk',{ids,confirmation:'УДАЛИТЬ'});$('job').textContent=`Запущена очередь из ${d.total} комментариев`; $('cancel').disabled=false;selected.clear();watchJob()}
+ catch(e){alert(e.message);await load()}
+};
+async function watchJob(){if(polling)return;polling=true;let timer;try{
+ let running=true;while(running){let j=await(await fetch('/api/job')).json();$('job').textContent=`Очередь: обработано ${j.done}/${j.total}, неуспешно/пропущено ${j.failed}. ${j.message}`; $('cancel').disabled=!j.running;
+ await load();running=j.running;if(running)await new Promise(r=>setTimeout(r,1000))}
+}finally{polling=false;$('cancel').disabled=true}}
+$('cancel').onclick=async()=>{if(!confirm(vkcmText('Остановить очередь после текущего запроса к VK?','Stop the queue after the current VK request?')))return;try{await request('/api/cancel',{});$('cancel').disabled=true}catch(e){alert(e.message)}};
+$('report').onclick=async()=>{try{const r=await(await fetch('/api/report')).json();$('reportStatus').textContent=r.account_id?`VK ID ${r.account_id}: `+Object.entries(r.saved).map(([k,v])=>`${statusLabel[k]||k}: ${v}`).join(' · '):'Сначала подключите VK аккаунт для просмотра журнала.'}catch(e){$('reportStatus').textContent=e.message}};
+load();loadVKIDStatus();updateVKIDReady();
+</script></body></html>
