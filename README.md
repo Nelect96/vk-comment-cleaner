@@ -73,3 +73,7 @@ Offline tests:
 See the [full English guide](docs/README.en.md), [Russian guide](docs/README.ru.md), [security notes](SECURITY.md), [contribution guide](CONTRIBUTING.md) and [clean-history publication checklist](docs/PUBLISHING.md).
 
 **License: MIT.**
+
+## Разработчик
+
+Приложение разработано и сопровождается **[Nelect Studio](https://nelect.ru)**.
